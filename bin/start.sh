@@ -15,20 +15,26 @@
 # limitations under the License.
 #
 
-ps aux |grep "spark-sandbox" | tr -s " " |  cut -d " " -f 2 | xargs kill >/dev/null 2>&1
+#ps aux |grep "spark-sandbox" | tr -s " " |  cut -d " " -f 2 | xargs kill >/dev/null 2>&1
 
 # using environment variable to find Spark & Hadoop home directory
-if [ -z "$SPARK_HOME" ]; then echo "SPARK_HOME is NOT set"; else echo "SPARK_HOME defined as '$SPARK_HOME'"; fi
 if [ -z "$HADOOP_HOME" ]; then echo "$HADOOP_HOME is NOT set"; else echo "HADOOP_HOME defined as '$HADOOP_HOME'"; fi
+if [ -z "$SPARK_HOME" ]; then echo "SPARK_HOME is NOT set"; else echo "SPARK_HOME defined as '$SPARK_HOME'"; fi
 
 HOSTNAME="$(/bin/hostname -f)"
 
-sbt clean compile package assembly
-
 if [ "$1" = "csv" ]
 then
-  echo "Starting CSV Application at $SPARK_HOME"
+  echo "Starting CSV parsing application at $SPARK_HOME"
   hadoop fs -rm hdfs://localhost:9000/users/lresende/data.csv
   hadoop fs -put /Users/lresende/dev/stc/source/spark-stream/src/main/resources/csv/data.csv hdfs://localhost:9000/users/lresende/data.csv
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --packages com.databricks:spark-csv_2.11:1.3.0 --class com.luck.csv.CsvApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out; tail -100f ./target/application.out &
+  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --packages com.databricks:spark-csv_2.11:1.3.0 --class com.luck.csv.CsvApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
+  tail -100f ./target/application.out
+fi
+
+if [ "$1" = "streaming" ]
+then
+  echo "Starting Streaming application at $SPARK_HOME"
+  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --class com.luck.streaming.StreamingApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
+  tail -100f ./target/application.out
 fi
