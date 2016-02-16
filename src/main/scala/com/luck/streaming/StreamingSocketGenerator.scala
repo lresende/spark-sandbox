@@ -28,10 +28,9 @@ object StreamingSocketGenerator {
     try {
       println("Starting streaming application...") // scalastyle:ignore
       val serverSocket = new ServerSocket(ServerPort)
-      val clientSocket = serverSocket.accept()
-      // while (true) {
-        new ServerThread(clientSocket).start()
-      // }
+      while (true) {
+        new ServerThread(serverSocket.accept()).start()
+      }
       serverSocket.close()
     }
     catch {
