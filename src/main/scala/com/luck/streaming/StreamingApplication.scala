@@ -49,9 +49,10 @@ object StreamingApplication {
 
         df.printSchema()
 
-        df.groupBy("symbol").max().show()
+        val bySymbol = df.groupBy("symbol")
 
-        df.groupBy("symbol").min().show()
+        bySymbol.max().show()
+        bySymbol.min().show()
       }
     }
 
