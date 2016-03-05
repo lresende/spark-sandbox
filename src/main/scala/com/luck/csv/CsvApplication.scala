@@ -29,7 +29,7 @@ object CsvApplication {
 
   def main(args: Array[String]): Unit = {
 
-    println("Starting CSV Application")
+    println("Starting CSV Application") //scalastyle:ignore
 
     val sparkConf = new SparkConf()
                         .setAppName("Spark-CSV")
@@ -44,5 +44,4 @@ object CsvApplication {
                        .load("hdfs://localhost:9000/users/lresende/data.csv")
                        .show(50, false)
   }
-
 }
