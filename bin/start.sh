@@ -34,6 +34,14 @@ then
   tail -100f ./target/application.out
 fi
 
+if [ "$1" = "jdbc" ]
+then
+  echo "Starting JDBC application at $SPARK_HOME"
+  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --jars /Users/lresende/opt/db2-jdbc-v10.5/db2jcc4.jar,/Users/lresende/opt/postgresql/postgresql-9.4.1208.jre6.jar --class com.luck.sql.JDBCApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
+  tail -100f ./target/application.out
+fi
+
+
 if [ "$1" = "objectstore" ]
 then
   echo "Starting ObjectStore application at $SPARK_HOME"
