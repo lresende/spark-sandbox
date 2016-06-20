@@ -28,9 +28,6 @@ import org.apache.spark.{SparkContext, SparkConf}
   */
 object JDBCApplication {
 
-
-
-
   def runDB2(sqlContext: SQLContext): DataFrame = {
     val jdbcUrl = "jdbc:db2://192.168.99.100:50000/foo:user=db2inst1;password=rootpass;retrieveMessagesFromServerOnGetMessage=true;" // scalastyle:ignore
 
