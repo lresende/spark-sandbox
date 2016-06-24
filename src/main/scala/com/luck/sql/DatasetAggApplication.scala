@@ -17,18 +17,21 @@
 package com.luck.sql
 
 import org.apache.spark.sql.expressions.Aggregator
+import org.apache.spark.sql.{Dataset, Encoder, Encoders, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.Dataset
 
-case class People(age: Int, name: String)
+case class AggData(a: Int, b: String)
 
-object nameAgg extends Aggregator[People, String, String] {
+
+object NameAgg extends Aggregator[AggData, String, String] {
   def zero: String = ""
-  def reduce(b: String, a: People): String = a.name + b
+  def reduce(b: String, a: AggData): String = a.b + b
   def merge(b1: String, b2: String): String = b1 + b2
   def finish(r: String): String = r
+  override def bufferEncoder: Encoder[String] = Encoders.STRING
+  override def outputEncoder: Encoder[String] = Encoders.STRING
 }
+
 
 /**
   * Test scenario to replicate dataset corruption when input data is reordered
@@ -43,9 +46,13 @@ object  DatasetAggApplication {
     val sqlContext = new SQLContext(spark)
     import sqlContext.implicits._
 
-    val peopleds:
-      Dataset[People] = sqlContext.sql("SELECT 'Tim Preece' AS name, 1279869254 AS age").as[People]
+    val ds:
+      Dataset[AggData] = sqlContext.sql("SELECT 'Tim Preece' AS b, 1279869254 AS a").as[AggData]
 
-    peopleds.groupBy(_.age).agg(nameAgg.toColumn).show()
+    // Spark 1.x
+    // ds.groupBy(_.a).agg(NameAgg.toColumn).show()
+
+    // Spark 2.0
+    ds.groupByKey(_.a).agg(NameAgg.toColumn).show()
   }
 }

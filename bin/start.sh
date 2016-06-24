@@ -27,11 +27,33 @@ SCALA_VERSION=2.11
 if [ "$1" = "csv" ]
 then
   echo "Starting CSV parsing application at $SPARK_HOME"
+  hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
   hadoop fs -rmdir hdfs://localhost:9000/users/lresende
   hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
-  hadoop fs -rm hdfs://localhost:9000/users/lresende/data.csv
-  hadoop fs -put /Users/lresende/dev/stc/source/spark-stream/src/main/resources/csv/data.csv hdfs://localhost:9000/users/lresende/data.csv
+  hadoop fs -put ./src/main/resources/csv/data.csv hdfs://localhost:9000/users/lresende/data.csv
   nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --packages com.databricks:spark-csv_2.11:1.3.0 --class com.luck.csv.CsvApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
+  tail -100f ./target/application.out
+fi
+
+if [ "$1" = "bigcsv" ]
+then
+  echo "Starting CSV parsing application at $SPARK_HOME"
+  hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
+  hadoop fs -rmdir hdfs://localhost:9000/users/lresende
+  hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
+  hadoop fs -put ./src/main/resources/csv/2008.csv.bz2 hdfs://localhost:9000/users/lresende/2008.csv.bz2
+  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --num-executors 3 --class com.luck.csv.BigCsvApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
+  tail -100f ./target/application.out
+fi
+
+if [ "$1" = "dataset" ]
+then
+  echo "Starting CSV parsing application at $SPARK_HOME"
+  hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
+  hadoop fs -rmdir hdfs://localhost:9000/users/lresende
+  hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
+  hadoop fs -put ./src/main/resources/json/zips.json hdfs://localhost:9000/users/lresende/zips.json
+  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --class com.luck.sql.DatasetApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
   tail -100f ./target/application.out
 fi
 
