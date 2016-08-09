@@ -17,8 +17,7 @@
 package com.luck.csv
 
 import org.apache.spark._
-import org.apache.spark.sql.SQLContext
-
+import org.apache.spark.sql.SparkSession
 
 /**
   * Sample application that reads a CSV
@@ -31,17 +30,25 @@ object CsvApplication {
 
     println("Starting CSV Application") //scalastyle:ignore
 
-    val sparkConf = new SparkConf()
-                        .setAppName("Spark-CSV")
-                        .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sparkContext = new SparkContext(sparkConf)
-    val sqlContext = new SQLContext(sparkContext)
+    var sparkConf: SparkConf = new SparkConf()
+      .setAppName("Spark-CSV")
+      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
-    val df = sqlContext.read.format("com.databricks.spark.csv")
+    // check Spark configuration for master URL, set it to local if not configured
+    if (! sparkConf.contains("spark.master")) {
+      println(">>> will set master") //scalastyle:ignore
+      sparkConf.setMaster("local[2]")
+    }
+
+    val sparkSession: SparkSession = SparkSession.builder
+      .config(sparkConf)
+      .getOrCreate
+
+    val df = sparkSession.read
                        .option("header", "false") // Use first line of all files as header
                        .option("inferSchema", "false") // Automatically infer data types
                        .option("delimiter", " ")
-                       .load("hdfs://localhost:9000/users/lresende/data.csv")
+                       .csv("hdfs://localhost:9000/users/lresende/data.csv")
                        .show(50, false)
   }
 }
