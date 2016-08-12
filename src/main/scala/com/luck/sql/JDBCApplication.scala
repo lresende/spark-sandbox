@@ -16,8 +16,8 @@
  */
 package com.luck.sql
 
-import org.apache.spark.sql.{DataFrame, SQLContext}
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.sql.{DataFrame, SQLContext, SparkSession}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * Test Scenario for the following JIRAs related to case sensitive
@@ -28,10 +28,10 @@ import org.apache.spark.{SparkContext, SparkConf}
   */
 object JDBCApplication {
 
-  def runDB2(sqlContext: SQLContext): DataFrame = {
+  def runDB2(sparkSession: SparkSession): DataFrame = {
     val jdbcUrl = "jdbc:db2://192.168.99.100:50000/foo:user=db2inst1;password=rootpass;retrieveMessagesFromServerOnGetMessage=true;" // scalastyle:ignore
 
-    val df = sqlContext.read.format("jdbc")
+    val df = sparkSession.read.format("jdbc")
       .option("url", jdbcUrl)
       .option("driver", "com.ibm.db2.jcc.DB2Driver")
       .option("dbtable", "DB2INST1.SP500")
@@ -40,10 +40,10 @@ object JDBCApplication {
     return df
   }
 
-  def runPostgres(sqlContext: SQLContext): DataFrame = {
+  def runPostgres(sparkSession: SparkSession): DataFrame = {
     val jdbcUrl = "jdbc:postgresql://192.168.99.100:5432/foo?user=postgres&password=rootpass" // scalastyle:ignore
 
-    val df = sqlContext.read.format("jdbc")
+    val df = sparkSession.read.format("jdbc")
       .option("url", jdbcUrl)
       .option("driver", "org.postgresql.Driver")
       .option("dbtable", "sp500")
@@ -55,23 +55,30 @@ object JDBCApplication {
 
     println("Starting JDBC Application") //scalastyle:ignore
 
-    val sparkConf = new SparkConf()
+    var sparkConf: SparkConf = new SparkConf()
       .setAppName("Spark-JDBC")
-    val sparkContext = new SparkContext(sparkConf)
-    val sqlContext = new SQLContext(sparkContext)
 
-    val df = runPostgres(sqlContext)
+    // check Spark configuration for master URL, set it to local if not configured
+    if (! sparkConf.contains("spark.master")) {
+      sparkConf.setMaster("local[2]")
+    }
 
-    df.registerTempTable("sp500")
+    val sparkSession: SparkSession = SparkSession.builder
+      .config(sparkConf)
+      .getOrCreate
+
+    val df = runPostgres(sparkSession)
+
+    df.createOrReplaceTempView("sp500")
 
     df.printSchema()
 
     df.show()
 
-    val avgEPSNamed = sqlContext.sql("SELECT AVG(`Earnings/Share`) as AvgCPI FROM sp500")
+    val avgEPSNamed = sparkSession.sql("SELECT AVG(`Earnings/Share`) as AvgCPI FROM sp500")
     avgEPSNamed.show()
 
-    val all = sqlContext.sql("SELECT * FROM sp500")
+    val all = sparkSession.sql("SELECT * FROM sp500")
     all.show
   }
 

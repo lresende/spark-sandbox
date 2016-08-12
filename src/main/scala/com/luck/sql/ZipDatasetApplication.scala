@@ -16,9 +16,8 @@
  */
 package com.luck.sql
 
-import org.apache.spark.sql.{Dataset, SQLContext}
-import org.apache.spark.{SparkContext, SparkConf}
-
+import org.apache.spark.sql.{Dataset, SQLContext, SparkSession}
+import org.apache.spark.{SparkConf, SparkContext}
 import com.luck.utils.Timer
 
 // {
@@ -34,41 +33,47 @@ case class Zip(_id: String, city: String, loc: Seq[Double], pop: Long, state: St
   * Sample ingestion application of data set in json format
   * using Data Frame and Dataset APIs
   */
-object DatasetApplication {
+object ZipDatasetApplication {
 
   def manOf[T: Manifest](t: T): Manifest[T] = manifest[T]
 
   def main(args: Array[String]) {
-    val conf = new SparkConf().setAppName("Dataset APIs")
-    val spark = new SparkContext(conf)
-    val sqlContext = new SQLContext(spark)
-    import sqlContext.implicits._
 
-    Timer.start
+    println("Starting Dataset Application - ZIP") //scalastyle:ignore
+
+    var sparkConf: SparkConf = new SparkConf()
+      .setAppName("Spark-Zip-Dataset-API")
+
+    // check Spark configuration for master URL, set it to local if not configured
+    if (! sparkConf.contains("spark.master")) {
+      sparkConf.setMaster("local[2]")
+    }
+
+    val sparkSession: SparkSession = SparkSession.builder
+      .config(sparkConf)
+      .getOrCreate
+
+    import sparkSession.implicits._
+
     for(i <- 1 to 10) {
-      val zipsDF = sqlContext.read.json("hdfs://localhost:9000/users/lresende/zips.json")
-      Timer.printAverage
+      val zipsDF = sparkSession.read.json("hdfs://localhost:9000/users/lresende/zips.json")
       // zipsDF.unpersist(true)
       // sqlContext.clearCache()
-      Timer.addSample
-      // println("Zips are:" + manOf(zipsDS)) // scalastyle:ignore
+      println("Zips are:" + manOf(zipsDF)) // scalastyle:ignore
       println("-----") // scalastyle:ignore
     }
 
     println(">>>>>>>>>>>>>>>") // scalastyle:ignore
 
-    Timer.start
     for(i <- 1 to 10) {
-      val zipsDS = sqlContext.read.json("hdfs://localhost:9000/users/lresende/zips.json").as[Zip]
-      Timer.addSample
-      // println("Zips are:" + manOf(zipsDS)) // scalastyle:ignore
-       Timer.printAverage
+      val zipsDS = sparkSession.read.json("hdfs://localhost:9000/users/lresende/zips.json").as[Zip]
       // zipsDS.unpersist(true)
       // sqlContext.clearCache()
+      println("Zips are:" + manOf(zipsDS)) // scalastyle:ignore
       println("-----") // scalastyle:ignore
     }
 
-    val zipsDS = sqlContext.read.json("hdfs://localhost:9000/users/lresende/zips.json").as[Zip]
+    val zipsDS = sparkSession.read.json("hdfs://localhost:9000/users/lresende/zips.json").as[Zip]
     zipsDS.printSchema
 
     // zipsDS.groupBy
