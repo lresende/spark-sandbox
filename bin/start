@@ -24,13 +24,18 @@ if [ -z "$SPARK_HOME" ]; then echo "SPARK_HOME is NOT set"; else echo "SPARK_HOM
 HOSTNAME="$(/bin/hostname -f)"
 SCALA_VERSION=2.11
 
+echo "Uploading data ..."
+hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
+hadoop fs -rmdir hdfs://localhost:9000/users/lresende
+hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
+hadoop fs -put ./src/main/resources/csv/*.csv hdfs://localhost:9000/users/lresende/
+hadoop fs -put ./src/main/resources/json/*.json hdfs://localhost:9000/users/lresende/
+
+./bin/run.sh "$1"
+
 if [ "$1" = "csv" ]
 then
   echo "Starting CSV parsing application at $SPARK_HOME"
-  hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
-  hadoop fs -rmdir hdfs://localhost:9000/users/lresende
-  hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
-  hadoop fs -put ./src/main/resources/csv/data.csv hdfs://localhost:9000/users/lresende/data.csv
   nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --packages com.databricks:spark-csv_2.11:1.3.0 --class com.luck.csv.CsvApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
   tail -100f ./target/application.out
 fi
@@ -61,6 +66,17 @@ if [ "$1" = "datasetagg" ]
 then
   echo "Starting JDBC application at $SPARK_HOME"
   nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --class com.luck.sql.DatasetAggApplication ./target/scala-$SCALA_VERSION/spark-sandbox_$SCALA_VERSION-1.0.jar >> ./target/application.out &
+  tail -100f ./target/application.out
+fi
+
+if [ "$1" = "datasetbank" ]
+then
+  echo "Starting DataSet Bank application at $SPARK_HOME"
+  hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
+  hadoop fs -rmdir hdfs://localhost:9000/users/lresende
+  hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
+  hadoop fs -put ./src/main/resources/csv/bank.csv hdfs://localhost:9000/users/lresende/bank.csv
+  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --class com.luck.sql.DatasetBankApplication ./target/scala-$SCALA_VERSION/spark-sandbox_$SCALA_VERSION-1.0.jar >> ./target/application.out &
   tail -100f ./target/application.out
 fi
 
