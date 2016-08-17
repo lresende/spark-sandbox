@@ -18,7 +18,6 @@ name := "spark-sandbox"
 
 version := "1.0"
 
-// scalaVersion := "2.10.6"
 scalaVersion := "2.11.7"
 
 resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository"
@@ -26,8 +25,7 @@ resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
 resolvers += "Sonatype Repository" at "http://oss.sonatype.org/content/repositories/releases"
 
 // Spark dependencies as provided as they are available in spark runtime
-// val sparkDependency = "1.6.1"
-val sparkDependency = "2.0.0-SNAPSHOT"
+val sparkDependency = "2.0.0"
 
 libraryDependencies += "org.apache.spark"  %% "spark-core"        % sparkDependency  % "provided"
 libraryDependencies += "org.apache.spark"  %% "spark-streaming"   % sparkDependency  % "provided"
