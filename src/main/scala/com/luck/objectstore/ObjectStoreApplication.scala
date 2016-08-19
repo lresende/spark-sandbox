@@ -16,17 +16,43 @@
  */
 package com.luck.objectstore
 
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.{SparkConf, SparkContext}
 
 object ObjectStoreApplication {
   def main(args: Array[String]): Unit = {
-    println("Starting Streaming StreamingApplication") //scalastyle:ignore
+    println("Starting Streaming StreamingApplication") // scalastyle:ignore
 
-    val sparkConf = new SparkConf().setAppName("Spark-Streaming-Application")
-    val sparkContext = new SparkContext(sparkConf)
+    var sparkConf: SparkConf = new SparkConf()
+      .setAppName("ObjectStore-Application")
+
+    // check Spark configuration for master URL, set it to local if not configured
+    if (! sparkConf.contains("spark.master")) {
+      sparkConf.setMaster("local[2]")
+    }
+
+    val sparkSession: SparkSession = SparkSession.builder
+      .config(sparkConf)
+      .getOrCreate
+
+    // scalastyle:off
+
+    sparkSession.sparkContext.hadoopConfiguration.set("fs.swift2d.impl", "com.ibm.stocator.fs.ObjectStoreFileSystem")
+    sparkSession.sparkContext.hadoopConfiguration.set("fs.swift2d.service.Object-Storage-lresende.auth.url", "https://identity.open.softlayer.com/v3/auth/tokens")
+    sparkSession.sparkContext.hadoopConfiguration.set("fs.swift2d.service.Object-Storage-lresende.public", "true")
+    sparkSession.sparkContext.hadoopConfiguration.set("fs.swift2d.service.Object-Storage-lresende.tenant", "13e6f50b25cf41d795fadd8204dd3896")
+    sparkSession.sparkContext.hadoopConfiguration.set("fs.swift2d.service.Object-Storage-lresende.password", "Z#R3R1dbNQWqws#J")
+    sparkSession.sparkContext.hadoopConfiguration.set("fs.swift2d.service.Object-Storage-lresende.username", "568d8d81902f4543b36ab1ddc1027aca")
+    sparkSession.sparkContext.hadoopConfiguration.set("fs.swift2d.service.Object-Storage-lresende.auth.method", "keystoneV3")
+    sparkSession.sparkContext.hadoopConfiguration.set("fs.swift2d.service.Object-Storage-lresende.region", "dallas")
+    sparkSession.sparkContext.hadoopConfiguration.set("", "")
+    sparkSession.sparkContext.hadoopConfiguration.set("", "")
+    // scalastyle:on
 
     val data = Array(1, 2, 3, 4, 5, 6, 7, 8)
-    val distData = sparkContext.parallelize(data)
-    distData.saveAsTextFile("swift2d://parquet.Object-Storage-lresende/one1.txt")
+    val distData = sparkSession.sparkContext.parallelize(data)
+    for(i <- 1 to 50) {
+        distData.saveAsTextFile("swift2d://parquet.Object-Storage-lresende/one" + i + ".txt")
+    }
   }
 }
