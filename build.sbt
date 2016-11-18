@@ -18,7 +18,7 @@ name := "spark-sandbox"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository"
 resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
