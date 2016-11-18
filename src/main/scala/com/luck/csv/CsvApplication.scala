@@ -24,6 +24,8 @@ import org.apache.spark.sql.SparkSession
   * and display its contents
   */
 
+case class SomeData(id: Integer, timestamp: String)
+
 object CsvApplication {
 
   def main(args: Array[String]): Unit = {
@@ -44,11 +46,16 @@ object CsvApplication {
       .config(sparkConf)
       .getOrCreate
 
+    import sparkSession.implicits._
+
     val df = sparkSession.read
-                       .option("header", "false") // Use first line of all files as header
-                       .option("inferSchema", "false") // Automatically infer data types
-                       .option("delimiter", " ")
-                       .csv("hdfs://localhost:9000/users/lresende/data.csv")
-                       .show(50, false)
+                       .option("header", "true") // Use first line of all files as header
+                       .option("inferSchema", "true") // Automatically infer data types
+                       .option("delimiter", " ") // define the delimiter to use
+                       .csv("/users/lresende/data.csv") // location relative to hdfs root
+                       .as[SomeData]  // this will return DataSet[SomeData]
+    df.printSchema()
+
+    df.show(50, false)
   }
 }
