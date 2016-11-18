@@ -15,88 +15,17 @@
 # limitations under the License.
 #
 
-#ps aux |grep "spark-sandbox" | tr -s " " |  cut -d " " -f 2 | xargs kill >/dev/null 2>&1
-
 # using environment variable to find Spark & Hadoop home directory
 if [ -z "$HADOOP_HOME" ]; then echo "$HADOOP_HOME is NOT set"; else echo "HADOOP_HOME defined as '$HADOOP_HOME'"; fi
 if [ -z "$SPARK_HOME" ]; then echo "SPARK_HOME is NOT set"; else echo "SPARK_HOME defined as '$SPARK_HOME'"; fi
 
 HOSTNAME="$(/bin/hostname -f)"
+HDFS_HOST=localhost:9000
 SCALA_VERSION=2.11
 
 echo "Uploading data ..."
-hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
-hadoop fs -rmdir hdfs://localhost:9000/users/lresende
-hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
-hadoop fs -put ./src/main/resources/csv/*.csv hdfs://localhost:9000/users/lresende/
-hadoop fs -put ./src/main/resources/json/*.json hdfs://localhost:9000/users/lresende/
-
-./bin/run.sh "$1"
-
-if [ "$1" = "csv" ]
-then
-  echo "Starting CSV parsing application at $SPARK_HOME"
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --packages com.databricks:spark-csv_2.11:1.3.0 --class com.luck.csv.CsvApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
-  tail -100f ./target/application.out
-fi
-
-if [ "$1" = "bigcsv" ]
-then
-  echo "Starting CSV parsing application at $SPARK_HOME"
-  hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
-  hadoop fs -rmdir hdfs://localhost:9000/users/lresende
-  hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
-  hadoop fs -put ./src/main/resources/csv/2008.csv.bz2 hdfs://localhost:9000/users/lresende/2008.csv.bz2
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --num-executors 3 --class com.luck.csv.BigCsvApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
-  tail -100f ./target/application.out
-fi
-
-if [ "$1" = "dataset" ]
-then
-  echo "Starting CSV parsing application at $SPARK_HOME"
-  hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
-  hadoop fs -rmdir hdfs://localhost:9000/users/lresende
-  hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
-  hadoop fs -put ./src/main/resources/json/zips.json hdfs://localhost:9000/users/lresende/zips.json
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --class com.luck.sql.DatasetApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
-  tail -100f ./target/application.out
-fi
-
-if [ "$1" = "datasetagg" ]
-then
-  echo "Starting JDBC application at $SPARK_HOME"
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --class com.luck.sql.DatasetAggApplication ./target/scala-$SCALA_VERSION/spark-sandbox_$SCALA_VERSION-1.0.jar >> ./target/application.out &
-  tail -100f ./target/application.out
-fi
-
-if [ "$1" = "datasetbank" ]
-then
-  echo "Starting DataSet Bank application at $SPARK_HOME"
-  hadoop fs -rm -r hdfs://localhost:9000/users/lresende/*
-  hadoop fs -rmdir hdfs://localhost:9000/users/lresende
-  hadoop fs -mkdir -p hdfs://localhost:9000/users/lresende
-  hadoop fs -put ./src/main/resources/csv/bank.csv hdfs://localhost:9000/users/lresende/bank.csv
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --class com.luck.sql.DatasetBankApplication ./target/scala-$SCALA_VERSION/spark-sandbox_$SCALA_VERSION-1.0.jar >> ./target/application.out &
-  tail -100f ./target/application.out
-fi
-
-if [ "$1" = "jdbc" ]
-then
-  echo "Starting JDBC application at $SPARK_HOME"
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --jars /Users/lresende/opt/db2-jdbc-v10.5/db2jcc4.jar,/Users/lresende/opt/postgresql/postgresql-9.4.1208.jre6.jar --class com.luck.sql.JDBCApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
-  tail -100f ./target/application.out
-fi
-
-if [ "$1" = "objectstore" ]
-then
-  echo "Starting ObjectStore application at $SPARK_HOME"
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --jars /Users/lresende/.m2/repository/com/ibm/stocator/stocator/1.0.0/stocator-1.0.0-jar-with-dependencies.jar --class com.luck.objectstore.ObjectStoreApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
-  tail -100f ./target/application.out
-fi
-
-if [ "$1" = "streaming" ]
-then
-  echo "Starting Streaming application at $SPARK_HOME"
-  nohup $SPARK_HOME/bin/spark-submit --master spark://$HOSTNAME:7077 --class com.luck.streaming.StreamingApplication ./target/scala-2.11/spark-sandbox_2.11-1.0.jar >> ./target/application.out &
-  tail -100f ./target/application.out
-fi
+$HADOOP_HOME/bin/hadoop fs -rm -r hdfs://$HDFS_HOST/users/lresende/*
+$HADOOP_HOME/bin/hadoop fs -rmdir hdfs://$HDFS_HOST/users/lresende
+$HADOOP_HOME/bin/hadoop fs -mkdir -p hdfs://$HDFS_HOST/users/lresende
+$HADOOP_HOME/bin/hadoop fs -put ./src/main/resources/csv/*.csv hdfs://$HDFS_HOST/users/lresende/
+$HADOOP_HOME/bin/hadoop fs -put ./src/main/resources/json/*.json hdfs://$HDFS_HOST/users/lresende/
