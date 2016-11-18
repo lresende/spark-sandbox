@@ -71,7 +71,7 @@ object BankDatasetApplication {
       .option("inferSchema", "true") // Automatically infer data types
       .option("delimiter", ";")
       .option("nullValue", "")
-      .load("hdfs://localhost:9000/users/lresende/bank.csv")
+      .load("/users/lresende/bank.csv")
       .as[Bank]
 
     banks.show()
