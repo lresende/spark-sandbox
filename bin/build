@@ -15,4 +15,6 @@
 # limitations under the License.
 #
 
+# sbt "set offline := true" clean compile package assembly
+
 sbt clean compile package assembly
